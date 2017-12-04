@@ -92,7 +92,6 @@ public class DetailFragment extends Fragment implements StepAdapter.OnShowMoreCl
 
     @Override
     public void setOnClickListener(int position) {
-        Step currentStep= stepArrayList.get(position);
-        mListener.onStepClickListener(currentStep);
+        mListener.onStepClickListener(position , stepArrayList);
     }
 }

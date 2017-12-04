@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlayerFactory;
@@ -25,8 +26,11 @@ import com.google.android.exoplayer2.util.Util;
 import com.omni.backingapp.R;
 import com.omni.backingapp.model.Step;
 
+import java.util.ArrayList;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 /**
  * Created by Omni on 24/11/2017.
@@ -47,11 +51,21 @@ public class DescritionOfStepFragment extends Fragment {
     @BindView(R.id.step_previous)
     Button previousStep ;
 
+    @BindView(R.id.step_desc_tv)
+    TextView stepTextView ;
 
-    public  static  DescritionOfStepFragment newInstance(Step currentStep){
+    private ArrayList<Step> steps ;
+    private int currentPosition ;
+    private boolean mIsTwoPage ;
+
+
+    public  static  DescritionOfStepFragment newInstance(int stepPos , ArrayList<Step> steps , boolean mIsTwoPane){
         DescritionOfStepFragment fragment = new DescritionOfStepFragment();
         Bundle args = new Bundle();
-        args.putParcelable("currentStep" , currentStep);
+        args.putParcelableArrayList("steps" , steps);
+        args.putInt("pos" , stepPos);
+        args.putBoolean("TwoPane" ,mIsTwoPane);
+
         fragment.setArguments(args);
         return fragment ;
     }
@@ -59,10 +73,14 @@ public class DescritionOfStepFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if(getArguments()!=null){
-            if(getArguments().containsKey("currentStep"))
-            {
-                currentStep = getArguments().getParcelable("currentStep");
+        if (getArguments() != null) {
+            if (getArguments().containsKey("steps")) {
+                currentPosition = getArguments().getInt("pos");
+                steps = getArguments().getParcelableArrayList("steps");
+                mIsTwoPage = getArguments().getBoolean("TwoPane");
+
+                if (steps != null)
+                    currentStep = steps.get(currentPosition);
             }
         }
     }
@@ -80,6 +98,8 @@ public class DescritionOfStepFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
 //        initializePlayer(buildMediaSource(currentStep.getVideoURL()));
+
+        stepTextView.setText(currentStep.getDescription());
     }
 
     @Override
@@ -96,6 +116,29 @@ public class DescritionOfStepFragment extends Fragment {
         if ((Util.SDK_INT <= 23 || mExoPlayer == null)) {
             initializePlayer(buildMediaSource(currentStep.getVideoURL()));
         }
+    }
+
+    @OnClick(R.id.step_next)
+    void getNextStep(){
+        if(currentPosition>=0 && currentPosition<steps.size()-1){
+            currentPosition++;
+            currentStep = steps.get(currentPosition);
+            updateUI();
+        }
+    }
+    @OnClick(R.id.step_previous)
+    void getPreviousStep(){
+        if(currentPosition>0 ){
+            currentPosition--;
+            currentStep = steps.get(currentPosition);
+            updateUI();
+        }
+    }
+
+    private void updateUI(){
+        stepTextView.setText(currentStep.getDescription());
+
+        initializePlayer(buildMediaSource(currentStep.getVideoURL()));
     }
 
 

@@ -28,6 +28,15 @@
         tools:layout_editor_absoluteX="0dp"
         tools:layout_editor_absoluteY="256dp" />
 
+    <TextView
+        android:id="@+id/step_desc_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/padding_16"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/horizontalHalf" />
+
 
     <Button
         android:id="@+id/step_previous"
@@ -35,7 +44,8 @@
         android:layout_height="wrap_content"
         android:drawableStart="@drawable/ic_chevron_left_black_24dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"/>
+        app:layout_constraintStart_toStartOf="parent"
+        />
 
 
     <Button
@@ -44,6 +54,7 @@
         android:layout_height="wrap_content"
         android:drawableStart="@drawable/ic_chevron_right_black_24dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        />
 
 </android.support.constraint.ConstraintLayout>
