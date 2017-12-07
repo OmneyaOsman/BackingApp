@@ -42,16 +42,27 @@ public class DetailFragment extends Fragment implements StepAdapter.OnShowMoreCl
 
     private ArrayList<Ingredient> ingredientArrayList ;
    private ArrayList<Step> stepArrayList ;
+
+
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            if (getArguments().containsKey("current ingredient")&&getArguments().containsKey("current Steps")) {
-                ingredientArrayList = getArguments().getParcelableArrayList("current ingredient");
-                stepArrayList = getArguments().getParcelableArrayList("current Steps");
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if(stepArrayList!=null) {
+            outState.putParcelableArrayList("stepArrayList",  stepArrayList);
+
+            RecyclerView.LayoutManager layoutManager = stepsRecyclerView.getLayoutManager();
+            if (layoutManager != null && layoutManager instanceof LinearLayoutManager) {
+                int mScrollPosition = ((LinearLayoutManager) layoutManager).findFirstVisibleItemPosition();
+                outState.putInt("mScrollPosition", mScrollPosition);
+
             }
         }
+        if(ingredientArrayList!=null) {
+            outState.putParcelableArrayList("ingredientArrayList",  ingredientArrayList);
+        }
     }
+
+
 
 
     public static DetailFragment newInstance (ArrayList<Ingredient> ingredients , ArrayList<Step> steps){
@@ -63,26 +74,60 @@ public class DetailFragment extends Fragment implements StepAdapter.OnShowMoreCl
         return fragment;
 
     }
+
+    View rootView ;
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View root = inflater.inflate(R.layout.detail_fragment , container , false);
-        ButterKnife.bind(this , root);
+        if(rootView==null) {
+            rootView = inflater.inflate(R.layout.detail_fragment, container, false);
+            ButterKnife.bind(this, rootView);
+            LinearLayoutManager manager = new LinearLayoutManager(getActivity());
+            recyclerView.setLayoutManager(manager);
 
-        LinearLayoutManager manager = new LinearLayoutManager(getActivity());
-        recyclerView.setLayoutManager(manager);
+            LinearLayoutManager StepManager = new LinearLayoutManager(getActivity());
+            stepsRecyclerView.setLayoutManager(StepManager);
+        }
 
-        LinearLayoutManager StepManager = new LinearLayoutManager(getActivity());
-        stepsRecyclerView.setLayoutManager(StepManager);
 
-        return  root ;
+        if(savedInstanceState==null) {
+            if (getArguments() != null) {
+                if (getArguments().containsKey("current ingredient") && getArguments().containsKey("current Steps")) {
+                    ingredientArrayList = getArguments().getParcelableArrayList("current ingredient");
+                    stepArrayList = getArguments().getParcelableArrayList("current Steps");
+                }
+            }
+        }
+        else if (savedInstanceState.containsKey("stepArrayList")) {
+            ingredientArrayList = savedInstanceState.getParcelableArrayList("ingredientArrayList");
+            stepArrayList = savedInstanceState.getParcelableArrayList("stepArrayList");
+
+            if (stepArrayList != null) {
+
+                int mScrollPosition = savedInstanceState.getInt("mScrollPosition");
+                RecyclerView.LayoutManager layoutManager = stepsRecyclerView.getLayoutManager();
+                if (layoutManager != null) {
+                    int count = layoutManager.getChildCount();
+                    if (mScrollPosition != RecyclerView.NO_POSITION && mScrollPosition < count) {
+                        layoutManager.scrollToPosition(mScrollPosition);
+                    }
+                }
+
+            }
+        }
+
+
+        return  rootView ;
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        setRecyclerView(ingredientArrayList , stepArrayList);
+    }
 
+    private void setRecyclerView( ArrayList<Ingredient> ingredientArrayList, ArrayList<Step> stepArrayList ){
         IngredientAdapter adapter = new IngredientAdapter(getActivity(),ingredientArrayList);
         recyclerView.setAdapter(adapter);
 

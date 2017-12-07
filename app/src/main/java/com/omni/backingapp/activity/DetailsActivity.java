@@ -21,31 +21,47 @@ public class DetailsActivity extends AppCompatActivity implements StepClickListe
     public static boolean mIsTwoPane = false;
 
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean("saved" , true);
+    }
 
+   private  DetailFragment fragment ;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_details);
 
-        ActionBar actionBar = this.getSupportActionBar();
+        if(savedInstanceState==null) {
+            ActionBar actionBar = this.getSupportActionBar();
 
-        // Set the action bar back button to look like an up button
-        if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
+            // Set the action bar back button to look like an up button
+            if (actionBar != null) {
+                actionBar.setDisplayHomeAsUpEnabled(true);
+            }
 
-        Intent intent = getIntent();
-        if(intent.hasExtra("current ingredient")&&intent.hasExtra("current Steps")){
-           ArrayList<Ingredient> ingredients = intent.getParcelableArrayListExtra("current ingredient");
-            ArrayList<Step> steps =intent.getParcelableArrayListExtra("current Steps");
+            Intent intent = getIntent();
+            if (intent.hasExtra("current ingredient") && intent.hasExtra("current Steps")) {
+                ArrayList<Ingredient> ingredients = intent.getParcelableArrayListExtra("current ingredient");
+                ArrayList<Step> steps = intent.getParcelableArrayListExtra("current Steps");
 
-            DetailFragment fragment =  DetailFragment.newInstance(ingredients , steps);
+                 fragment = DetailFragment.newInstance(ingredients, steps);
+                fragment.setListener(this);
+                getSupportFragmentManager().beginTransaction().replace(R.id.detail_container,
+                        fragment ,"detail").commit();
+
+                //check if TwoPane
+                if (null != findViewById(R.id.desc_container)) {
+                    mIsTwoPane = true;
+
+                }
+            }
+        }else {
+            fragment = (DetailFragment) getSupportFragmentManager().findFragmentByTag("detail");
             fragment.setListener(this);
-            getSupportFragmentManager().beginTransaction().replace(R.id.detail_container ,
-                   fragment).commit();
-
             //check if TwoPane
-            if(null != findViewById(R.id.desc_container)){
+            if (null != findViewById(R.id.desc_container)) {
                 mIsTwoPane = true;
 
             }

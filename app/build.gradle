@@ -45,7 +45,13 @@ dependencies {
 
     implementation 'com.google.android.exoplayer:exoplayer:r2.2.0'
     implementation 'com.android.support:design:26.1.0'
+    implementation 'com.github.bumptech.glide:glide:4.1.1'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.1.1'
 
+
+
+    implementation 'io.realm:realm-android:0.84.1'
+    annotationProcessor 'io.realm:realm-android:0.84.1'
 
     androidTestCompile('com.android.support.test.espresso:espresso-contrib:2.2') {
         // Necessary to avoid version conflicts

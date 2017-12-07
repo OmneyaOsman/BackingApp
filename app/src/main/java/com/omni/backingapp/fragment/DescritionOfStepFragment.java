@@ -9,8 +9,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.LoadControl;
@@ -53,6 +56,8 @@ public class DescritionOfStepFragment extends Fragment {
 
     @BindView(R.id.step_desc_tv)
     TextView stepTextView ;
+    @BindView(R.id.step_desc_image)
+    ImageView stepIm ;
 
     private ArrayList<Step> steps ;
     private int currentPosition ;
@@ -79,10 +84,23 @@ public class DescritionOfStepFragment extends Fragment {
                 steps = getArguments().getParcelableArrayList("steps");
                 mIsTwoPage = getArguments().getBoolean("TwoPane");
 
-                if (steps != null)
+                if (steps != null&& savedInstanceState==null)
                     currentStep = steps.get(currentPosition);
             }
         }
+    }
+
+    private long position = C.TIME_UNSET;
+    private String desc ="" ,currentVideoUrl ="" ,thumnailUrl="" ;
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+      position =  mExoPlayer.getCurrentPosition();
+      outState.putLong("pos" , position);
+      outState.putInt("stepPosition" , currentPosition);
+      outState.putString("desc" , desc);
+      outState.putString("url" , currentVideoUrl);
+      outState.putParcelable("currentStep" , currentStep);
     }
 
     @Nullable
@@ -90,6 +108,7 @@ public class DescritionOfStepFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.desc_of_step_fragment , container , false);
         ButterKnife.bind(this , view);
+
         return view;
     }
 
@@ -97,25 +116,34 @@ public class DescritionOfStepFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-//        initializePlayer(buildMediaSource(currentStep.getVideoURL()));
+        if(savedInstanceState!=null) {
+            position = savedInstanceState.getLong("pos", C.TIME_UNSET);
+            desc = savedInstanceState.getString("desc");
+            currentVideoUrl = savedInstanceState.getString("url");
+            thumnailUrl = savedInstanceState.getString("image");
+            currentStep = savedInstanceState.getParcelable("currentStep");
+            currentPosition = savedInstanceState.getInt("stepPosition");
+        }else{
+            desc =currentStep.getDescription();
+            thumnailUrl =currentStep.getThumbnailURL();
+            currentVideoUrl = currentStep.getVideoURL();
 
-        stepTextView.setText(currentStep.getDescription());
+        }
+        stepTextView.setText(desc);
+        Glide.with(getActivity())
+                .load(thumnailUrl)
+                .into(stepIm);
+
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        if (Util.SDK_INT > 23) {
-            initializePlayer(buildMediaSource(currentStep.getVideoURL()));        }
-    }
 
     @Override
     public void onResume() {
         super.onResume();
+
         hideSystemUi();
-        if ((Util.SDK_INT <= 23 || mExoPlayer == null)) {
-            initializePlayer(buildMediaSource(currentStep.getVideoURL()));
-        }
+        initializePlayer(buildMediaSource(currentVideoUrl));
+
     }
 
     @OnClick(R.id.step_next)
@@ -136,9 +164,22 @@ public class DescritionOfStepFragment extends Fragment {
     }
 
     private void updateUI(){
-        stepTextView.setText(currentStep.getDescription());
+        desc = currentStep.getDescription();
+        thumnailUrl =currentStep.getThumbnailURL();
+        stepTextView.setText(desc);
+        Glide.with(getActivity())
+                .load(thumnailUrl)
+                .into(stepIm);
 
-        initializePlayer(buildMediaSource(currentStep.getVideoURL()));
+        currentVideoUrl =currentStep.getVideoURL();
+
+
+        position = C.TIME_UNSET;
+            mExoPlayer.stop();
+            mExoPlayer = null ;
+            initializePlayer(buildMediaSource(currentVideoUrl));
+
+
     }
 
 
@@ -156,7 +197,9 @@ public class DescritionOfStepFragment extends Fragment {
             mExoPlayer.prepare(mediaSource);
             mExoPlayer.setPlayWhenReady(true);
 
+
         }
+        mExoPlayer.seekTo(position);
     }
 
 
@@ -187,9 +230,8 @@ public class DescritionOfStepFragment extends Fragment {
      */
     private void releasePlayer() {
         if (mExoPlayer != null) {
-//            playbackPosition = mExoPlayer.getCurrentPosition();
-//            currentWindow = mExoPlayer.getCurrentWindowIndex();
-//            playWhenReady = mExoPlayer.getPlayWhenReady();
+            position = mExoPlayer.getCurrentPosition();
+
             mExoPlayer.release();
             mExoPlayer = null;
         }
@@ -198,9 +240,6 @@ public class DescritionOfStepFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-        if (Util.SDK_INT <= 23) {
-            releasePlayer();
-        }
     }
 
     @Override
@@ -210,6 +249,7 @@ public class DescritionOfStepFragment extends Fragment {
             releasePlayer();
         }
     }
+
 
 
 }

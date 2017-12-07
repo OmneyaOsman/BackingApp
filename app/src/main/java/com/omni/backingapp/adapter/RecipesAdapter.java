@@ -5,8 +5,10 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.omni.backingapp.R;
 import com.omni.backingapp.model.RecipeResponse;
 
@@ -52,7 +54,9 @@ public class RecipesAdapter extends RecyclerView.Adapter<RecipesAdapter.RecipeVi
         RecipeResponse recipe = mRecipeList.get(position);
         holder.recipeNameTv.setText(recipe.getName());
         holder.recipeServingTv.setText(context.getString(R.string.servings).concat(String.valueOf(recipe.getServings())));
-        
+        Glide.with(context)
+                .load(recipe.getImage())
+                .into(holder.imageView);
     }
 
     @Override
@@ -69,6 +73,8 @@ public class RecipesAdapter extends RecyclerView.Adapter<RecipesAdapter.RecipeVi
 
         @BindView(R.id.recipe_serving)
         TextView recipeServingTv ;
+        @BindView(R.id.recipe_image)
+        ImageView imageView ;
 
         public RecipeViewHolder(View itemView) {
             super(itemView);

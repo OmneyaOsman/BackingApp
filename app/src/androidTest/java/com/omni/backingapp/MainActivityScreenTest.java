@@ -16,8 +16,10 @@ import org.junit.runner.RunWith;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
+import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.contrib.RecyclerViewActions.scrollToPosition;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static android.support.test.espresso.matcher.ViewMatchers.withText;
 
 /**
  * Created by Omni on 02/12/2017.
@@ -50,12 +52,28 @@ public class MainActivityScreenTest {
     }
 
 
+    // Convenience helper
+    public static RecyclerViewMatcher withRecyclerView(final int recyclerViewId) {
+        return new RecyclerViewMatcher(recyclerViewId);
+    }
+
+
+
+
 
     @Test
     public void testRecyclerView(){
+        onView(withRecyclerView(R.id.recipes_recycler_view).atPositionOnView(0, R.id.recipe_name)).
+                check(matches(withText("Nutella Pie")));
 
-        onView(withId(R.id.recipes_recycler_view)).perform(scrollToPosition(1));
-        onView(withId(R.id.recipes_recycler_view)).perform(RecyclerViewActions.actionOnItemAtPosition(0, click()));
+
+
+        onView(withId(R.id.recipes_recycler_view)).perform(scrollToPosition(2));
+        onView(withId(R.id.recipes_recycler_view)).perform(RecyclerViewActions.actionOnItemAtPosition(2, click()));
+
+
+
+
 
 
     }

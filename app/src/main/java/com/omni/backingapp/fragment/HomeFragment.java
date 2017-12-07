@@ -1,5 +1,7 @@
 package com.omni.backingapp.fragment;
 
+import android.app.Activity;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -17,6 +19,9 @@ import com.omni.backingapp.R;
 import com.omni.backingapp.RecipeClickListener;
 import com.omni.backingapp.activity.MainActivity;
 import com.omni.backingapp.adapter.RecipesAdapter;
+import com.omni.backingapp.db.IngredientEntry;
+import com.omni.backingapp.db.RecipeEntry;
+import com.omni.backingapp.model.Ingredient;
 import com.omni.backingapp.model.RecipeResponse;
 import com.omni.backingapp.rest.ApiClient;
 import com.omni.backingapp.rest.ApiService;
@@ -28,6 +33,8 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+import io.realm.Realm;
+import io.realm.RealmList;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -44,11 +51,13 @@ public class HomeFragment extends Fragment implements RecipesAdapter.OnItemClick
 
     private Unbinder unbinder ;
     private RecipeClickListener mListener ;
-    private GridLayoutManager mLayoutManager ;
-
 
     @BindView(R.id.recipes_recycler_view)
     RecyclerView mRecyclerView ;
+
+    private Realm realm ;
+
+
 
     private List<RecipeResponse> mList ;
 
@@ -91,7 +100,7 @@ public class HomeFragment extends Fragment implements RecipesAdapter.OnItemClick
 
             unbinder = ButterKnife.bind(this, rootView);
             setRecipeListener((MainActivity) getActivity());
-            mLayoutManager = new GridLayoutManager(getActivity(), 2);
+            GridLayoutManager mLayoutManager = new GridLayoutManager(getActivity(), 2);
             mRecyclerView.setLayoutManager(mLayoutManager);
         }
         // Get the IdlingResource instance
@@ -121,8 +130,25 @@ public class HomeFragment extends Fragment implements RecipesAdapter.OnItemClick
                 }
                 setRecyclerView(mList);
             }
+        }else if(mList!=null){
+            setRecyclerView(mList);
         }
     }
+
+
+private void saveRecipeId(int recipeId){
+    SharedPreferences sp = getContext().getSharedPreferences("recipe", Activity.MODE_PRIVATE);
+    int myIntValue = sp.getInt("recipeId", -1);
+    if(myIntValue==-1) {
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putInt("recipeId", recipeId);
+        editor.commit();
+    }
+}
+//to get id
+//    SharedPreferences sp = getSharedPreferences("your_prefs", Activity.MODE_PRIVATE);
+//    int myIntValue = sp.getInt("your_int_key", -1);
+
 
     private void callRecipes() {
 
@@ -141,6 +167,12 @@ public class HomeFragment extends Fragment implements RecipesAdapter.OnItemClick
 
 
                 mList = response.body();
+                if(mList!=null && mList.size()!=0) {
+                    saveRecipeId(mList.get(0).getId());
+                    saveRecipes();
+                }
+
+
                 setRecyclerView(mList);
             }
 
@@ -172,6 +204,41 @@ public class HomeFragment extends Fragment implements RecipesAdapter.OnItemClick
         mRecyclerView.setAdapter(mAdapter);
     }
 
+    private void saveRecipes(){
+        try {
+            realm = Realm.getDefaultInstance();
+            if(realm.where(RecipeEntry.class).findAll()== null ||realm.where(RecipeEntry.class).findAll().size()==0) {
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        for (RecipeResponse recipeResponse : mList) {
+                            RecipeEntry recipeEntry = realm.createObject(RecipeEntry.class);
+                            recipeEntry.setId(recipeResponse.getId());
+                            recipeEntry.setName(recipeResponse.getName());
+                            RealmList<IngredientEntry> realmList = new RealmList<>();
+                            for (Ingredient ingredient : recipeResponse.getIngredients()) {
+                                IngredientEntry ingredientEntry = realm.createObject(IngredientEntry.class);
+                                ingredientEntry.setIngredient(ingredient.getIngredient());
+                                ingredientEntry.setMeasure(ingredient.getMeasure());
+                                ingredientEntry.setQuantity(ingredient.getQuantity());
+                                realmList.add(ingredientEntry);
+
+                            }
+                            recipeEntry.setIngredients(realmList);
+
+                        }
+                    }
+                });
+            }
+            // ... Use the Realm instance
+        } finally {
+            if (realm != null) {
+                realm.close();
+            }
+        }
+
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -186,6 +253,7 @@ public class HomeFragment extends Fragment implements RecipesAdapter.OnItemClick
         RecipeResponse currentRecipe= mList.get(position);
         mListener.onRecipeClickListener(currentRecipe);
     }
+
 
 
 }
